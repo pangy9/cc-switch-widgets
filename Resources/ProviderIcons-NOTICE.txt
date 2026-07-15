@@ -1,0 +1,21 @@
+Provider SVG icons are derived from token-monitor:
+https://github.com/Javis603/token-monitor/tree/main/assets/icons
+
+token-monitor is licensed under the MIT License.
+Copyright belongs to its respective authors and icon trademark owners.
+
+Included assets:
+- codex.svg
+- claude.svg
+- deepseek.svg
+- zai.svg
+
+The SVG fill is normalized to black so Apple template rendering can apply the
+current theme's standard text color.
+
+The extended icon set is synchronized from CC Switch's official extracted
+icon directory:
+https://github.com/farion1231/cc-switch/tree/main/src/icons/extracted
+
+Those icons remain subject to the upstream repository license and their
+respective brand guidelines. The app renders them as monochrome templates.

@@ -1,0 +1,64 @@
+name: CCSwitchWidgets
+options:
+  minimumXcodeGenVersion: 2.45.0
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 63BU9WWKS2
+    CURRENT_PROJECT_VERSION: 152
+    MARKETING_VERSION: 0.15.2
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    GENERATE_INFOPLIST_FILE: YES
+    ENABLE_DEBUG_DYLIB: NO
+targets:
+  CCSwitchWidgets:
+    type: application
+    platform: macOS
+    sources:
+      - path: Apps/CCSwitchWidgetsApp
+      - path: Sources/CCSwitchCore
+      - path: Resources/ProviderIcons.xcassets
+      - path: Resources/ProviderIcons
+        type: folder
+    dependencies:
+      - sdk: libsqlite3.tbd
+      - target: CCSwitchWidgetsWidget
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pangyun.CCSwitchWidgets
+        CODE_SIGN_ENTITLEMENTS: Config/CCSwitchWidgetsApp.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Config/CCSwitchWidgetsApp-Info.plist
+  CCSwitchWidgetsWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Apps/CCSwitchWidgetsWidget
+      - path: Sources/CCSwitchCore
+      - path: Resources/ProviderIcons.xcassets
+      - path: Resources/ProviderIcons
+        type: folder
+    dependencies:
+      - sdk: libsqlite3.tbd
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pangyun.CCSwitchWidgets.Widget
+        CODE_SIGN_ENTITLEMENTS: Config/CCSwitchWidgetsWidget.entitlements
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Config/CCSwitchWidgetsWidget-Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: "CC Switch Widgets"
+schemes:
+  CCSwitchWidgets:
+    build:
+      targets:
+        CCSwitchWidgets: all
+    run:
+      config: Debug
+    test:
+      config: Debug

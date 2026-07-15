@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Build artifacts
+build/
+.build/
+dist/
+DerivedData/
+
+# Xcode project (由 xcodegen 从 project.yml 生成)
+CCSwitchWidgets.xcodeproj/
+*.xcuserstate
+xcuserdata/
+
+# SwiftPM
+.swiftpm/
+
+# Editors / internal
+.vscode/
+.codex/
+.superpowers/
