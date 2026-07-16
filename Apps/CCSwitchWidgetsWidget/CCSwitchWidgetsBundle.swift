@@ -288,12 +288,14 @@ struct PublishedTrendProvider: AppIntentTimelineProvider {
             customMovementColors: SharedUsageStore().loadCustomMovementColors(),
             resolvedModule: module
         )
+        #if DEBUG
         SharedUsageStore().recordRangeDebug(
             source: source,
             range: range,
             appID: entry.selectedApp,
             bucketCount: entry.snapshot.buckets(for: range).count
         )
+        #endif
         return entry
     }
 }
@@ -337,12 +339,14 @@ struct PublishedRankingProvider: AppIntentTimelineProvider {
             customPalette: SharedUsageStore().loadCustomPalette(),
             customMovementColors: SharedUsageStore().loadCustomMovementColors()
         )
+        #if DEBUG
         SharedUsageStore().recordRangeDebug(
             source: source,
             range: range,
             appID: entry.selectedApp,
             bucketCount: entry.snapshot.buckets(for: range).count
         )
+        #endif
         return entry
     }
 }
@@ -407,12 +411,14 @@ struct PublishedAppCardProvider: AppIntentTimelineProvider {
             customPalette: SharedUsageStore().loadCustomPalette(),
             customMovementColors: SharedUsageStore().loadCustomMovementColors()
         )
+        #if DEBUG
         SharedUsageStore().recordRangeDebug(
             source: source,
             range: range,
             appID: appID,
             bucketCount: entry.snapshot.buckets(for: range).count
         )
+        #endif
         return entry
     }
 }
@@ -421,6 +427,8 @@ struct TodayOverviewWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "today-overview", provider: SnapshotProvider()) { entry in
             SharedWidgetCard(model: entry.sharedCardModel(kind: .todayOverview, size: .small), surface: .widget)
+                .contentShape(Rectangle())
+                .widgetURL(chartURL(kind: "apps", range: .today))
         }
         .configurationDisplayName("今日总览")
         .description("今日 Token、昨日对比、环比和请求数。")
@@ -434,6 +442,8 @@ struct AverageComparisonWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "average-comparison", provider: SnapshotProvider()) { entry in
             SharedWidgetCard(model: entry.sharedCardModel(kind: .averageComparison, size: .small), surface: .widget)
+                .contentShape(Rectangle())
+                .widgetURL(chartURL(kind: "apps", range: .sevenDays))
         }
         .configurationDisplayName("今日 vs 7 日均值")
         .description("今日用量和此前 7 个完整自然日均值对比。")
@@ -447,6 +457,7 @@ struct AppCardWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "app-card-v3", intent: PublishedAppCardIntent.self, provider: PublishedAppCardProvider()) { entry in
             SharedWidgetCard(model: entry.sharedCardModel(kind: .appCard, size: .small), surface: .widget)
+                .contentShape(Rectangle())
                 .widgetURL(chartURL(kind: "app", range: entry.chartRange, app: entry.selectedApp))
         }
         .configurationDisplayName("应用用量")
@@ -461,6 +472,8 @@ struct TopModelWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "top-model", provider: SnapshotProvider()) { entry in
             SharedWidgetCard(model: entry.sharedCardModel(kind: .topModel, size: .small), surface: .widget)
+                .contentShape(Rectangle())
+                .widgetURL(chartURL(kind: "models", range: .today))
         }
         .configurationDisplayName("Top 模型")
         .description("自动显示今日 Token 最高的模型。")
@@ -474,6 +487,7 @@ struct ModelRankingWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "model-ranking-v3", intent: PublishedRankingIntent.self, provider: PublishedRankingProvider()) { entry in
             SharedFamilyCard(entry: entry, kind: .modelRanking)
+                .contentShape(Rectangle())
                 .widgetURL(chartURL(kind: "models", range: entry.chartRange))
         }
         .configurationDisplayName("模型用量排行")
@@ -488,6 +502,7 @@ struct SevenDayTrendWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "usage-trend-v4", intent: PublishedTrendIntent.self, provider: PublishedTrendProvider()) { entry in
             SharedWidgetCard(model: entry.sharedCardModel(kind: .usageTrend, size: .large), surface: .widget)
+                .contentShape(Rectangle())
                 .widgetURL(chartURL(kind: "apps", range: entry.chartRange))
         }
         .configurationDisplayName("近 7 日趋势")
@@ -505,6 +520,8 @@ struct UsageHeatmapWidget: Widget {
             provider: SnapshotProvider()
         ) { entry in
             SharedFamilyCard(entry: entry, kind: .usageHeatmap)
+                .contentShape(Rectangle())
+                .widgetURL(chartURL(kind: "apps", range: .thirtyDays))
         }
         .configurationDisplayName("热力图")
         .description("以 GitHub 风格按周展示最近 6 个月的每日 Token 用量。")
@@ -518,6 +535,8 @@ struct CostOverviewWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "cost-overview", provider: SnapshotProvider()) { entry in
             SharedWidgetCard(model: entry.sharedCardModel(kind: .costOverview, size: .small), surface: .widget)
+                .contentShape(Rectangle())
+                .widgetURL(chartURL(kind: "apps", range: .today))
         }
         .configurationDisplayName("费用概览")
         .description("今日费用、昨日环比和本月累计。")
@@ -662,6 +681,8 @@ struct ProviderBalancesWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "provider-balances-v1", intent: BalanceModuleIntent.self, provider: BalanceTimelineProvider()) { entry in
             ProviderBalancesWidgetView(entry: entry)
+                .contentShape(Rectangle())
+                .widgetURL(chartURL(kind: "apps", range: .today))
         }
         .configurationDisplayName("账户")
         .description("独立选择账户、额度显示方式和 Provider 图标。中号最多 3 个，大号最多 6 个。")

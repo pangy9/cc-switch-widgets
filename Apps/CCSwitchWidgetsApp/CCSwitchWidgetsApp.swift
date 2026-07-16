@@ -2,6 +2,7 @@
 import CCSwitchCore
 #endif
 import AppKit
+import Darwin
 import ServiceManagement
 import SwiftUI
 import WidgetKit
@@ -576,6 +577,21 @@ enum RefreshPreset: String, CaseIterable, Identifiable {
 /// 这里再监听窗口成为 key 作为兜底：若意外出现多窗口，只保留 key 窗口。
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
+    private let instanceLock = SingleInstanceLock()
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        guard instanceLock.acquire() else {
+            NSApplication.shared.terminate(nil)
+            return
+        }
+
+        applySavedActivationPolicy()
+        instanceLock.terminateOtherCopiesAfterLaunch()
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        applySavedActivationPolicy()
+    }
 
     @MainActor
     func configure(model: AppModel) {
@@ -594,12 +610,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        applySavedActivationPolicy()
+    }
+
     @MainActor
     private func showMainWindow() {
         let sender = NSApplication.shared
+        applySavedActivationPolicy()
         if let window = sender.windows.first(where: { !($0 is NSPanel) }) {
             window.makeKeyAndOrderFront(nil)
             sender.activate(ignoringOtherApps: true)
+        }
+    }
+
+    @MainActor
+    private func applySavedActivationPolicy() {
+        let showDockIcon = SharedUsageStore().loadShowDockIcon()
+        let expected: NSApplication.ActivationPolicy = showDockIcon ? .regular : .accessory
+        if NSApplication.shared.activationPolicy() != expected {
+            NSApplication.shared.setActivationPolicy(expected)
+        }
+    }
+}
+
+/// macOS can restore one App copy while the login item launches another copy from a
+/// different path. The advisory lock makes the menu-bar owner unique across all copies.
+private final class SingleInstanceLock {
+    private var descriptor: Int32 = -1
+
+    func acquire() -> Bool {
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: SharedConstants.appGroupIdentifier
+        ) else { return true }
+
+        let lockURL = containerURL.appendingPathComponent("CCSwitchWidgets.instance.lock")
+        descriptor = Darwin.open(lockURL.path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard descriptor >= 0 else { return true }
+        return flock(descriptor, LOCK_EX | LOCK_NB) == 0
+    }
+
+    func terminateOtherCopiesAfterLaunch() {
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.pangyun.CCSwitchWidgets"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+            NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+                .filter { $0.processIdentifier != ownPID }
+                .forEach { $0.terminate() }
+        }
+    }
+
+    deinit {
+        if descriptor >= 0 {
+            flock(descriptor, LOCK_UN)
+            Darwin.close(descriptor)
         }
     }
 }
