@@ -120,11 +120,12 @@ public struct SharedWidgetCard: View {
                 Spacer(minLength: 4)
                 if model.module.kind == .providerBalances {
                     quotaModeControl
+                } else {
+                    Text(CardUpdateTimeFormatter.string(from: updateDate, now: model.renderedAt))
+                        .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                        .foregroundStyle(palette.secondaryText.opacity(0.62))
+                        .lineLimit(1).minimumScaleFactor(0.65)
                 }
-                Text(CardUpdateTimeFormatter.string(from: updateDate, now: model.renderedAt))
-                    .font(.system(size: 9.5, weight: .medium, design: .monospaced))
-                    .foregroundStyle(palette.secondaryText.opacity(0.62))
-                    .lineLimit(1).minimumScaleFactor(0.65)
             }
             content(palette: palette)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -321,12 +322,21 @@ public struct SharedWidgetCard: View {
                                 if model.module.showsProviderIcons {
                                     ProviderIconView(balance: balance, color: palette.primaryText)
                                 }
-                                Text(balance.name).font(.system(size: 11, weight: .semibold, design: .rounded)).lineLimit(1)
+                                Text(balance.name)
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.72)
+                                Text(CardUpdateTimeFormatter.string(from: balance.queriedAt, now: model.renderedAt))
+                                    .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                                    .foregroundStyle(palette.secondaryText.opacity(0.78))
+                                    .lineLimit(1)
+                                    .fixedSize(horizontal: true, vertical: false)
                             }
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Capsule().fill(palette.secondaryText.opacity(0.12)))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .layoutPriority(1)
+                            Spacer(minLength: 0)
                             if let remaining = balance.remaining {
                                 Text(String(format: "%.2f %@", remaining, balance.unit)).font(.system(size: 12, weight: .bold, design: .rounded))
                                     .lineLimit(1).minimumScaleFactor(0.65)
