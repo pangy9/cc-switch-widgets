@@ -53,25 +53,50 @@ macOS Widget 扩展运行在独立沙盒中，不能可靠继承宿主 App
 
 ## 安装
 
-### 方式一：下载即用（普通用户）
+目前推荐从源码自行编译。仓库暂不提供 Developer ID 签名并经 Apple 公证的 DMG，
+也不建议通过关闭 Gatekeeper 或清除 quarantine 属性来安装来源不明的构建产物。
 
-1. 到 [Releases](../../releases) 下载最新的 `.dmg`。
-2. 打开 `.dmg`，把 `CCSwitchWidgets.app` 拖进「Applications」文件夹。
-3. 首次打开会被 Gatekeeper 拦截（未公证），在终端执行一次：
-   ```bash
-   xattr -dr com.apple.quarantine /Applications/CCSwitchWidgets.app
-   ```
-   或右键 → 打开。
-4. 启动 App，按提示连接 CC Switch；再到桌面长按 → 编辑组件，搜索「CC Switch」添加。
+### 准备环境
 
-### 方式二：自己编译（开发者）
+- macOS 14 或更高版本；
+- Xcode 15 或更高版本，并在 `Xcode → Settings → Accounts` 登录 Apple ID；
+- 可用于本机签名的 Apple Development 团队（个人免费团队也可以）；
+- [xcodegen](https://github.com/yonaskolb/XcodeGen)：`brew install xcodegen`。
 
-需要 **macOS 14+**、**Xcode 15+**、[xcodegen](https://github.com/yonaskolb/XcodeGen)。
+App、Widget Extension 与 App Group 必须由同一个开发团队签名。
+由于仓库中的默认 Bundle ID 和 App Group 属于项目作者，其他开发者自行编译时需要换成自己的唯一标识；
+否则 App 可能可以启动，但桌面组件无法读取共享快照，只会显示占位内容。
+
+### 推荐：让 AI 编码助手协助编译
+
+如果你不熟悉 Xcode 签名，可以克隆仓库后，让 Codex、Claude Code 等能操作本地项目的 AI 编码助手执行下面的任务：
+
+```text
+请帮我在本机编译并安装这个 macOS SwiftUI 项目。
+
+要求：
+1. 检查 Xcode、xcodegen 和 Apple Development 签名是否可用。
+2. 使用我已经登录 Xcode 的 Apple 开发者团队。
+3. 为宿主 App、Widget Extension 和 App Group 设置属于该团队的唯一标识。
+4. 同步修改 project.yml、两个 entitlements 文件，以及 SharedConstants 中对应的标识，保证 App 与 Widget 使用同一个 App Group。
+5. 运行测试，然后通过 script/build_and_run.sh 构建并安装到 ~/Applications。
+6. 验证 App 和 Widget Extension 的签名、provisioning profile 与 App Group entitlement。
+7. 不修改业务逻辑，不上传任何账号、OAuth 凭据或用量数据。
+```
+
+### 手动编译
+
+1. 克隆仓库并安装 `xcodegen`。
+2. 在 `project.yml` 中设置自己的 `DEVELOPMENT_TEAM`，并为 App 和 Widget 设置唯一的 `PRODUCT_BUNDLE_IDENTIFIER`。
+3. 将 `Config/CCSwitchWidgetsApp.entitlements` 和 `Config/CCSwitchWidgetsWidget.entitlements` 中的 App Group 改为属于自己团队的唯一标识。
+4. 同步修改 `Sources/CCSwitchCore/SharedUsageStore.swift` 中 `SharedConstants` 的 App、Widget 与 App Group 标识。
+5. 构建并安装：
 
 ```bash
-# 克隆本仓库后进入目录；用你自己的 Apple 开发者团队（个人免费团队也可），不设则用项目默认团队
 DEVELOPMENT_TEAM=你的TeamID bash script/build_and_run.sh
 ```
+
+安装后启动 App，连接 CC Switch 数据目录；再在 macOS 桌面进入“编辑小组件”，搜索“CC Switch”添加组件。
 
 ## 使用
 
@@ -96,8 +121,6 @@ DEVELOPMENT_TEAM=你的TeamID bash script/build_and_run.sh
 ```bash
 swift test                       # 跑核心逻辑测试
 bash script/build_and_run.sh     # 构建并安装到 ~/Applications
-bash script/build_release.sh     # 构建并打包 Release .dmg（发布用）
 ```
 
 欢迎 PR：加 provider 支持、新组件类型、配色、图表……
-
