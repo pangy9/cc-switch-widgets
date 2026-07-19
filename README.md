@@ -98,6 +98,35 @@ DEVELOPMENT_TEAM=你的TeamID bash script/build_and_run.sh
 
 安装后启动 App，连接 CC Switch 数据目录；再在 macOS 桌面进入“编辑小组件”，搜索“CC Switch”添加组件。
 
+### 免费 Personal Team 的 7 天期限
+
+使用免费的 Apple Personal Team 自行签名时，Xcode 生成的 provisioning profile
+通常只有 7 天有效期。到期后，App 本身和部分静态组件可能仍能运行，但依赖
+AppIntent 配置的组件（例如模型排行、趋势图、账户）可能停止更新，并一直显示
+最后一次成功生成的时间线。
+
+常见现象包括：
+
+- App 内数据正常刷新，但部分桌面组件停留在旧时间；
+- 只有可独立设置范围、模型或账户的组件不再更新；
+- 系统日志出现 `No AppIntent in timeline`、`Failed to create LinkAction` 或
+  `Returned view collection was either nil or empty`。
+
+确认 Xcode 已在 `Xcode → Settings → Accounts` 登录 Apple ID 后，可运行仓库提供的
+一键重建脚本。它会调用 Xcode 更新 profile、覆盖安装 App，并重新加载 Widget 扩展：
+
+```bash
+DEVELOPMENT_TEAM=你的TeamID bash script/rebuild_personal_team.sh
+```
+
+免费签名到期后需要再次运行。你也可以把这条命令加入自己使用的脚本启动器或
+定时任务；仓库不提供包含用户目录、Apple 账户或证书信息的 LaunchAgent 配置。
+如果需要长期分发且不希望周期性重签名，应使用有效的付费 Apple Developer Program
+成员资格进行签名。
+
+该脚本只调用本机 Xcode 和项目现有的构建安装流程，不会上传 CC Switch 数据、
+OAuth 凭据或 Apple 账户信息。
+
 ## 使用
 
 打开 App 后可设置：
@@ -113,6 +142,7 @@ DEVELOPMENT_TEAM=你的TeamID bash script/build_and_run.sh
 - **需要 macOS 14 及以上**（14 / 15 / 26 都可以；依赖 WidgetKit / Swift Charts），暂无 Windows / Linux 版。
 - 需要先安装并配置好 [CC Switch](https://github.com/farion1231/cc-switch)。
 - 用量 / 花费依赖 CC Switch 记录的请求日志；未经过 CC Switch 的请求不计入。
+- 使用免费 Apple Personal Team 签名时，provisioning profile 通常需要每 7 天重新生成。
 
 ## 开发
 
@@ -121,6 +151,7 @@ DEVELOPMENT_TEAM=你的TeamID bash script/build_and_run.sh
 ```bash
 swift test                       # 跑核心逻辑测试
 bash script/build_and_run.sh     # 构建并安装到 ~/Applications
+DEVELOPMENT_TEAM=你的TeamID bash script/rebuild_personal_team.sh  # 免费签名到期后重建
 ```
 
 欢迎 PR：加 provider 支持、新组件类型、配色、图表……
